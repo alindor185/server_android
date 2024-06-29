@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Share"
+        android:textSize="18sp"
+        android:textColor="@android:color/black"
+        android:paddingBottom="8dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingBottom="16dp">
+
+        <ImageView
+            android:id="@+id/share_whatsapp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_whatsapp"
+            android:layout_marginEnd="16dp" />
+
+        <ImageView
+            android:id="@+id/share_gmail"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_gmail"
+            android:layout_marginEnd="16dp" />
+
+        <ImageView
+            android:id="@+id/share_facebook"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_facebook"
+            android:layout_marginEnd="16dp" />
+
+        <ImageView
+            android:id="@+id/share_messenger"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_messenger"
+            android:layout_marginEnd="16dp" />
+
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Copy link"
+        android:textColor="@android:color/black"
+        android:padding="8dp"
+        android:background="?android:attr/selectableItemBackground"
+        android:gravity="center" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Create post"
+        android:textColor="@android:color/black"
+        android:padding="8dp"
+        android:background="?android:attr/selectableItemBackground"
+        android:gravity="center" />
+</LinearLayout>

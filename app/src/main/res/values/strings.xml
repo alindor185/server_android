@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">YouTube</string>
+    <string name="profile_image">Profile Image</string>
+    <string name="upload_image">Upload Image</string>
+    <string name="email_username_hint">Email or Username</string>
+    <string name="password_hint">Password</string>
+    <string name="confirm_password_hint">Password Again</string>
+    <string name="sign_in">sign in</string>
+    <string name="register">Register</string>
+    <string name="login">Login</string> <!-- Added this line -->
+    <string name="not_registered">Not registered? Register now</string> <!-- Added this line -->
+    <string name="forgot_password">Forgot Password?</string> <!-- Added this line -->
+    <string name="logo_desc">Logo Description</string>
+    <string name="share_icon_desc">Share</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+</resources>
