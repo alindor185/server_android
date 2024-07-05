@@ -208,5 +208,13 @@ public class Video implements Serializable {
         public String getProfilePic() {
             return profilePic;
         }
+
+    }
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public void setProfilePic(String profilePic) {
+        this.profilePic = profilePic;
     }
 }

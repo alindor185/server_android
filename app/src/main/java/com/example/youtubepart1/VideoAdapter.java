@@ -2,6 +2,7 @@ package com.example.youtubepart1;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -23,14 +24,16 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
 
     private List<Video> videoList;
     private OnItemClickListener listener;
-    private Context context;
+    private Activity context;
+    private User user;
 
     public interface OnItemClickListener {
         void onItemClick(Video video);
     }
 
-    public VideoAdapter(Activity context, OnItemClickListener listener) {
+    public VideoAdapter(Activity context, OnItemClickListener listener, User user) {
         super();
+        this.user = user;
         this.context = context;
         videoList = new ArrayList<>();
         new Thread(new Runnable() {
@@ -122,6 +125,18 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
             username.setText(video.getUserName()); // Ensure this line is correct
 
             itemView.setOnClickListener(v -> listener.onItemClick(video));
+            itemView.findViewById(R.id.icon_profile).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (video.getUserName() != null) {
+                        Intent intent = new Intent(context, UserActivity.class);
+                        intent.putExtra("user", AppDatabase.getDatabase(context).userDao().getUser(video.getUserName()));
+                        intent.putExtra("existingUser", user);
+                        context.startActivity(intent);
+                    } else
+                        ToastManager.showToast("It's not a real user", context);
+                }
+            });
         }
     }
 }
