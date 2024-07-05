@@ -14,12 +14,13 @@ public class SearchActivity extends AppCompatActivity {
     private VideoAdapter videoAdapter;
     private List<Video> videoList;
     private List<Video> filteredList;
+    private User user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
-
+        user = (User) getIntent().getSerializableExtra("user");
         SearchView searchView = findViewById(R.id.search_view);
         recyclerView = findViewById(R.id.recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -34,7 +35,7 @@ public class SearchActivity extends AppCompatActivity {
                 intent.putExtra("video", video);
                 startActivity(intent);
             }
-        });
+        }, user);
 
         recyclerView.setAdapter(videoAdapter);
 
