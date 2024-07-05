@@ -53,21 +53,7 @@
         android:padding="5dp"
         android:textColor="@android:color/black" />
 
-    <ImageView
-        android:id="@+id/user_comment_photo"
-        android:layout_width="wrap_content"
-        android:layout_height="54dp"
-        android:layout_below="@id/seekBar"
-        android:layout_alignParentEnd="true"
-        android:layout_marginStart="16dp"
-        android:layout_marginLeft="16dp"
-        android:layout_marginTop="216dp"
-        android:layout_marginEnd="381dp"
-        android:layout_marginRight="16dp"
-        android:layout_marginBottom="16dp"
-        android:src="@drawable/ic_profile" />
-
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/submit_comment"
         android:layout_width="76dp"
         android:layout_height="36dp"
