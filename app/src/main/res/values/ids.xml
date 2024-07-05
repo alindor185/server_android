@@ -73,7 +73,6 @@
     <item name="commentTime" type="id"/>
     <item name="icon_edit" type="id"/>
     <item name="icon_delete" type="id"/>
-    <item name="nav_sign_out" type="id"/>
-    <item name="icon_sign_out" type="id"/>
+    <item name="edit_delete" type="id"/>
 
 </resources>
