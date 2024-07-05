@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Base64;
+import android.util.TimeUtils;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
@@ -48,7 +49,7 @@ public class HomeActivity extends AppCompatActivity {
     private ActionBarDrawerToggle toggle;
     private boolean isLoggedIn = false;
     private ActivityResultLauncher<Intent> addVideoActivityResultLauncher;
-    private User user;
+    public static User user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,6 +110,7 @@ public class HomeActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(HomeActivity.this, SearchActivity.class);
+                intent.putExtra("user", user);
                 startActivity(intent);
             }
         });
@@ -186,6 +188,20 @@ public class HomeActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+        findViewById(R.id.icon_profile).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (user == null) {
+                    ToastManager.showToast("You have to log in.", HomeActivity.this);
+                    return;
+                }
+                Intent intent = new Intent(HomeActivity.this, UserActivity.class);
+                intent.putExtra("user", user);
+                intent.putExtra("existingUser", user);
+                startActivity(intent);
+            }
+        });
+
         recyclerView = findViewById(R.id.recycler_view);
         iconAdd = findViewById(R.id.icon_add);
 
@@ -257,7 +273,7 @@ public class HomeActivity extends AppCompatActivity {
                     intent.putExtra("user", user);
 
                     startActivity(intent);
-                });
+                }, user);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
