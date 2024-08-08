@@ -21,6 +21,9 @@ import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.Base64;
@@ -57,7 +60,16 @@ public class MainActivity extends AppCompatActivity {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    User existingUser = AppDatabase.getDatabase(MainActivity.this).userDao().getUser(username);
+                    User existingUser = new UserViewModel(MainActivity.this).getUser(username);
+                    JSONObject jsonObject = new Server(MainActivity.this).login(username, password);
+                    if (jsonObject != null) {
+                        try {
+                            UserToken.token = jsonObject.getString("token");
+                            UserToken.id = jsonObject.getJSONObject("user").getString("_id");
+                        } catch (JSONException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
