@@ -71,20 +71,14 @@ public class Video implements Serializable {
     public Video(Context context, String title, String url, int thumbnail, String views, String uploadDate, String channelName, String[] initialComments) {
         this.title = title;
         this.url = url;
-        Bitmap image = BitmapUtils.getResizedBitmap(BitmapFactory.decodeResource(context.getResources(), thumbnail));
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        image.compress(Bitmap.CompressFormat.JPEG, 100, bos);
-        String imageBase64 = Base64.encodeToString(bos.toByteArray(), Base64.DEFAULT);
+        String imageBase64 = ImageOperations.bitmapToBase64(ImageOperations.resourceToBitmap(context, thumbnail));
         this.thumbnail = imageBase64;
         this.views = views;
         this.uploadDate = uploadDate;
         this.channelName = channelName;
         isFile = false;
         List<Comment> commentsList = new ArrayList<>();
-        Bitmap image2 = BitmapUtils.getResizedBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_profile));
-        ByteArrayOutputStream bos2 = new ByteArrayOutputStream();
-        image2.compress(Bitmap.CompressFormat.PNG, 100, bos2);
-        profilePic = Base64.encodeToString(bos2.toByteArray(), Base64.DEFAULT);
+        profilePic = ImageOperations.bitmapToBase64(ImageOperations.resourceToBitmap(context, R.drawable.ic_profile));
         if (initialComments != null) {
             for (String comment : initialComments) {
                 commentsList.add(new Comment("User", "some time", comment, profilePic)); // Placeholder, update as needed
@@ -186,10 +180,7 @@ public class Video implements Serializable {
             this.name = name;
             this.time = time;
             this.text = text;
-            Bitmap image2 = BitmapUtils.getResizedBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_profile));
-            ByteArrayOutputStream bos2 = new ByteArrayOutputStream();
-            image2.compress(Bitmap.CompressFormat.PNG, 100, bos2);
-            this.profilePic = Base64.encodeToString(bos2.toByteArray(), Base64.DEFAULT);
+            this.profilePic = ImageOperations.bitmapToBase64(ImageOperations.resourceToBitmap(context, R.drawable.ic_profile));
         }
 
         // Getter methods

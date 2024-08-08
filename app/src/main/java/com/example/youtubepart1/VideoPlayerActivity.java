@@ -100,7 +100,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements CommentsAd
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
-                                AppDatabase.getDatabase(VideoPlayerActivity.this).videoDao().changeName(video.id, newTitle);
+                                new VideoViewModel(VideoPlayerActivity.this).changeName(video.id, newTitle);
                             }
                         }).start();
                     }
@@ -114,7 +114,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements CommentsAd
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        AppDatabase.getDatabase(VideoPlayerActivity.this).videoDao().delete(video);
+                        new VideoViewModel(VideoPlayerActivity.this).delete(video);
                         finish();
                     }
                 }).start();
@@ -217,7 +217,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements CommentsAd
             List<Video.Comment> comments = video.getCommentsList();
             comments.add(newComment);
             video.setCommentsList(comments);
-            AppDatabase.getDatabase(this).videoDao().update(video);
+            new VideoViewModel(VideoPlayerActivity.this).update(video);
             commentsAdapter.addComment(newComment);
             addCommentEditText.setText("");
             commentsRecyclerView.smoothScrollToPosition(commentsAdapter.getItemCount() - 1);
@@ -245,7 +245,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements CommentsAd
         isLiked = !isLiked;
         video.setIsLiked(isLiked);
         video.setLikeCount(likeCount);
-        AppDatabase.getDatabase(this).videoDao().update(video);
+        new VideoViewModel(VideoPlayerActivity.this).update(video);
         updateLikeDislikeUI();
     }
 
@@ -262,7 +262,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements CommentsAd
         isDisliked = !isDisliked;
         video.setIsLiked(isLiked);
         video.setLikeCount(likeCount);
-        AppDatabase.getDatabase(this).videoDao().update(video);
+        new VideoViewModel(this).update(video);
         updateLikeDislikeUI();
     }
 
@@ -327,7 +327,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements CommentsAd
 
         // Update the database
         new Thread(() -> {
-            AppDatabase.getDatabase(this).videoDao().update(video);
+            new VideoViewModel(VideoPlayerActivity.this).update(video);
         }).start();
 
         addCommentEditText.setText("");
@@ -344,7 +344,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements CommentsAd
 
         // Update the database
         new Thread(() -> {
-            AppDatabase.getDatabase(this).videoDao().update(video);
+            new VideoViewModel(VideoPlayerActivity.this).update(video);
         }).start();
 
         submitCommentButton.setOnClickListener(v -> submitComment());

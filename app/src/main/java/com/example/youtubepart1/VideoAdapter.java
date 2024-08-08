@@ -39,7 +39,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
         new Thread(new Runnable() {
             @Override
             public void run() {
-                VideoAdapter.this.videoList.addAll(AppDatabase.getDatabase(context).videoDao().getVideos());
+                VideoAdapter.this.videoList.addAll(new VideoViewModel(context).getVideos());
                 context.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -73,7 +73,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
         new Thread(new Runnable() {
             @Override
             public void run() {
-                VideoAdapter.this.videoList = AppDatabase.getDatabase(context).videoDao().getVideos();
+                VideoAdapter.this.videoList = new VideoViewModel(context).getVideos();
                 context.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -108,9 +108,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
         }
 
         public void bind(final Video video, final OnItemClickListener listener) {
-            byte[] bytes = Base64.decode(video.getThumbnail(), Base64.DEFAULT);
-            Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-            thumbnail.setImageBitmap(bitmap);
+            thumbnail.setImageBitmap(ImageOperations.base64ToBitmap(video.getThumbnail()));
             title.setText(video.getTitle());
             SharedPreferences sharedPreferences = context.getSharedPreferences("SharedPrefs", Context.MODE_PRIVATE);
             boolean isDarkMode = sharedPreferences.getBoolean("darkMode", false);
@@ -119,9 +117,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
             }
             views.setText(video.getViews());
             uploadDate.setText(video.getUploadDate());
-            byte[] bytes2 = Base64.decode(video.getProfilePic(), Base64.DEFAULT);
-            Bitmap bitmap2 = BitmapFactory.decodeByteArray(bytes2, 0, bytes2.length);
-            iconProfile.setImageBitmap(bitmap2); // Ensure this line is correct
+            iconProfile.setImageBitmap(ImageOperations.base64ToBitmap(video.getProfilePic())); // Ensure this line is correct
             username.setText(video.getUserName()); // Ensure this line is correct
 
             itemView.setOnClickListener(v -> listener.onItemClick(video));
@@ -130,7 +126,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
                 public void onClick(View v) {
                     if (video.getUserName() != null) {
                         Intent intent = new Intent(context, UserActivity.class);
-                        intent.putExtra("user", AppDatabase.getDatabase(context).userDao().getUser(video.getUserName()));
+                        intent.putExtra("user", new UserViewModel(context).getUser(video.getUserName()));
                         intent.putExtra("existingUser", user);
                         context.startActivity(intent);
                     } else
