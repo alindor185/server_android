@@ -42,9 +42,7 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.Commen
         holder.commentName.setText(comment.getName());
         holder.commentTime.setText(comment.getTime());
         holder.commentText.setText(comment.getText());
-        byte[] bytes = Base64.decode(comment.getProfilePic(), Base64.DEFAULT);
-        Bitmap image = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-        holder.iconProfile.setImageBitmap(image);
+        holder.iconProfile.setImageBitmap(ImageOperations.base64ToBitmap(comment.getProfilePic()));
 
         if (position == selectedPosition) {
             holder.commentText.setTypeface(null, Typeface.BOLD);

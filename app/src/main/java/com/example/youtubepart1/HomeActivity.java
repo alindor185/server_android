@@ -70,10 +70,7 @@ public class HomeActivity extends AppCompatActivity {
                             Uri uri = Uri.fromFile(new File(thumbnailUri));
                             String thumbnail = "";
                             try {
-                                Bitmap image = BitmapUtils.getResizedBitmap(MediaStore.Images.Media.getBitmap(getContentResolver(), uri));
-                                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                                image.compress(Bitmap.CompressFormat.PNG, 100, bos);
-                                thumbnail = Base64.encodeToString(bos.toByteArray(), Base64.DEFAULT);
+                                thumbnail = ImageOperations.bitmapToBase64(ImageOperations.uriToBitmap(this, uri));
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
                             }
@@ -81,7 +78,9 @@ public class HomeActivity extends AppCompatActivity {
                             new Thread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    AppDatabase.getDatabase(HomeActivity.this).videoDao().insert(newVideo);
+
+                                    new VideoViewModel(HomeActivity.this).insert(newVideo);
+                                    new Server(HomeActivity.this).createVideo(newVideo);
                                     runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
@@ -99,9 +98,7 @@ public class HomeActivity extends AppCompatActivity {
         isLoggedIn = user != null;
         if (isLoggedIn) {
             ImageView profileImage = findViewById(R.id.icon_profile);
-            byte[] bytes = Base64.decode(user.image, Base64.DEFAULT);
-            Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-            profileImage.setImageBitmap(bitmap);
+            profileImage.setImageBitmap(ImageOperations.base64ToBitmap(user.image));
         }
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -254,18 +251,19 @@ public class HomeActivity extends AppCompatActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                if (AppDatabase.getDatabase(HomeActivity.this).videoDao().getVideos().isEmpty()) {
-                    AppDatabase.getDatabase(HomeActivity.this).videoDao().insert(new Video(HomeActivity.this, "Eden Golan - Hurricane", "android.resource://" + getPackageName() + "/" + R.raw.huricane, R.drawable.huricane, "1M views", "2 days ago", "Eurovision Song Contest", new String[]{}));
-                    AppDatabase.getDatabase(HomeActivity.this).videoDao().insert(new Video(HomeActivity.this, "אושר כהן - מנגן ושר", "android.resource://" + getPackageName() + "/" + R.raw.oshercohen, R.drawable.oshercohen, "550K views", "1 week ago", "Music Channel", new String[]{}));
-                    AppDatabase.getDatabase(HomeActivity.this).videoDao().insert(new Video(HomeActivity.this, "Java Tutorial", "android.resource://" + getPackageName() + "/" + R.raw.javatoutorial, R.drawable.javatoutorial, "300K views", "3 days ago", "Tutorial Channel", new String[]{}));
-                    AppDatabase.getDatabase(HomeActivity.this).videoDao().insert(new Video(HomeActivity.this, "Dallas vs Minnesota Game 5", "android.resource://" + getPackageName() + "/" + R.raw.dalmin5, R.drawable.dalmin5, "800K views", "5 days ago", "Sports Channel", new String[]{}));
-                    AppDatabase.getDatabase(HomeActivity.this).videoDao().insert(new Video(HomeActivity.this, "מאיר בנאי - לך אלי (אודיו)", "android.resource://" + getPackageName() + "/" + R.raw.meirbanai, R.drawable.meirbanai, "400K views", "1 month ago", "Music Channel", new String[]{}));
-                    AppDatabase.getDatabase(HomeActivity.this).videoDao().insert(new Video(HomeActivity.this, "Lionel Messi best plays", "android.resource://" + getPackageName() + "/" + R.raw.messi, R.drawable.messi, "1.2M views", "2 weeks ago", "Sports Channel", new String[]{}));
-                    AppDatabase.getDatabase(HomeActivity.this).videoDao().insert(new Video(HomeActivity.this, "דודו טסה - בסוף מתרגלים להכל", "android.resource://" + getPackageName() + "/" + R.raw.dudutasa, R.drawable.dudutasa, "600K views", "3 weeks ago", "Music Channel", new String[]{}));
-                    AppDatabase.getDatabase(HomeActivity.this).videoDao().insert(new Video(HomeActivity.this, "קוקי לבנה - כמה הייתי רוצה", "android.resource://" + getPackageName() + "/" + R.raw.kukilevana, R.drawable.kukilevana, "700K views", "4 days ago", "Music Channel", new String[]{}));
-                    AppDatabase.getDatabase(HomeActivity.this).videoDao().insert(new Video(HomeActivity.this, "בית הבובות - סיגפו", "android.resource://" + getPackageName() + "/" + R.raw.sigapo, R.drawable.sigapo, "350K views", "2 months ago", "Music Channel", new String[]{}));
-                    AppDatabase.getDatabase(HomeActivity.this).videoDao().insert(new Video(HomeActivity.this, "עמיר בניון - ניצחת איתי הכל", "android.resource://" + getPackageName() + "/" + R.raw.mazal, R.drawable.mazal, "900K views", "6 days ago", "Music Channel", new String[]{}));
-                    AppDatabase.getDatabase(HomeActivity.this).videoDao().insert(new Video(HomeActivity.this, "ABBA - Gimme! Gimme! Gimme! (A Man After Midnight)", "android.resource://" + getPackageName() + "/" + R.raw.gimmegimme, R.drawable.gimmegimme, "2M views", "1 year ago", "Classic Music Channel", new String[]{}));
+                VideoViewModel videoViewModel = new VideoViewModel(HomeActivity.this);
+                if (videoViewModel.getVideos().isEmpty()) {
+                    videoViewModel.insert(new Video(HomeActivity.this, "Eden Golan - Hurricane", "android.resource://" + getPackageName() + "/" + R.raw.huricane, R.drawable.huricane, "1M views", "2 days ago", "Eurovision Song Contest", new String[]{}));
+                    videoViewModel.insert(new Video(HomeActivity.this, "אושר כהן - מנגן ושר", "android.resource://" + getPackageName() + "/" + R.raw.oshercohen, R.drawable.oshercohen, "550K views", "1 week ago", "Music Channel", new String[]{}));
+                    videoViewModel.insert(new Video(HomeActivity.this, "Java Tutorial", "android.resource://" + getPackageName() + "/" + R.raw.javatoutorial, R.drawable.javatoutorial, "300K views", "3 days ago", "Tutorial Channel", new String[]{}));
+                    videoViewModel.insert(new Video(HomeActivity.this, "Dallas vs Minnesota Game 5", "android.resource://" + getPackageName() + "/" + R.raw.dalmin5, R.drawable.dalmin5, "800K views", "5 days ago", "Sports Channel", new String[]{}));
+                    videoViewModel.insert(new Video(HomeActivity.this, "מאיר בנאי - לך אלי (אודיו)", "android.resource://" + getPackageName() + "/" + R.raw.meirbanai, R.drawable.meirbanai, "400K views", "1 month ago", "Music Channel", new String[]{}));
+                    videoViewModel.insert(new Video(HomeActivity.this, "Lionel Messi best plays", "android.resource://" + getPackageName() + "/" + R.raw.messi, R.drawable.messi, "1.2M views", "2 weeks ago", "Sports Channel", new String[]{}));
+                    videoViewModel.insert(new Video(HomeActivity.this, "דודו טסה - בסוף מתרגלים להכל", "android.resource://" + getPackageName() + "/" + R.raw.dudutasa, R.drawable.dudutasa, "600K views", "3 weeks ago", "Music Channel", new String[]{}));
+                    videoViewModel.insert(new Video(HomeActivity.this, "קוקי לבנה - כמה הייתי רוצה", "android.resource://" + getPackageName() + "/" + R.raw.kukilevana, R.drawable.kukilevana, "700K views", "4 days ago", "Music Channel", new String[]{}));
+                    videoViewModel.insert(new Video(HomeActivity.this, "בית הבובות - סיגפו", "android.resource://" + getPackageName() + "/" + R.raw.sigapo, R.drawable.sigapo, "350K views", "2 months ago", "Music Channel", new String[]{}));
+                    videoViewModel.insert(new Video(HomeActivity.this, "עמיר בניון - ניצחת איתי הכל", "android.resource://" + getPackageName() + "/" + R.raw.mazal, R.drawable.mazal, "900K views", "6 days ago", "Music Channel", new String[]{}));
+                    videoViewModel.insert(new Video(HomeActivity.this, "ABBA - Gimme! Gimme! Gimme! (A Man After Midnight)", "android.resource://" + getPackageName() + "/" + R.raw.gimmegimme, R.drawable.gimmegimme, "2M views", "1 year ago", "Classic Music Channel", new String[]{}));
                 }
                 videoAdapter = new VideoAdapter(HomeActivity.this, video -> {
                     Intent intent = new Intent(HomeActivity.this, VideoPlayerActivity.class);

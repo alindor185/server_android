@@ -7,6 +7,12 @@ android {
     namespace = "com.example.youtubepart1"
     compileSdk = 34
 
+    packagingOptions {
+        resources {
+            excludes += "META-INF/DEPENDENCIES"
+        }
+    }
+
     defaultConfig {
         applicationId = "com.example.youtubepart1"
         minSdk = 26
@@ -45,4 +51,5 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
     implementation ("com.google.android.material:material:1.4.0")
     implementation ("de.hdodenhof:circleimageview:3.1.0")
+    implementation ("org.apache.httpcomponents.client5:httpclient5:5.3.1")
 }

@@ -1,7 +1,6 @@
 package com.example.youtubepart1;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
@@ -17,7 +16,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -109,8 +107,7 @@ public class AddVideoActivity extends AppCompatActivity {
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
             thumbnailPath = savefile(data.getData());
             try {
-                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), data.getData());
-                thumbnailImageView.setImageBitmap(bitmap);
+                thumbnailImageView.setImageBitmap(ImageOperations.uriToBitmap(this, data.getData()));
                 thumbnailImageView.setVisibility(View.VISIBLE);
             } catch (IOException e) {
                 e.printStackTrace();
