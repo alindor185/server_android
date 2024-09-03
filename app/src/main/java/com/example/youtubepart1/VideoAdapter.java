@@ -115,7 +115,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.VideoViewHol
             if (isDarkMode) {
                 title.setTextColor(Color.WHITE);
             }
-            views.setText(video.getViews());
+            views.setText(video.getViews()+"");
             uploadDate.setText(video.getUploadDate());
             iconProfile.setImageBitmap(ImageOperations.base64ToBitmap(video.getProfilePic())); // Ensure this line is correct
             username.setText(video.getUserName()); // Ensure this line is correct

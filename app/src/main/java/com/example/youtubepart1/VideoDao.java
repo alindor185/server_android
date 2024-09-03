@@ -27,6 +27,10 @@ public interface VideoDao {
     void update(Video video);
     @Query("SELECT * FROM video WHERE userName = :username")
     List<Video> getVideosByUsername(String username);
+    @Query("Select * from video where id = :id")
+    Video getVideo(int id);
 
+    @Query("Delete from video")
+    void deleteAll();
 
 }
