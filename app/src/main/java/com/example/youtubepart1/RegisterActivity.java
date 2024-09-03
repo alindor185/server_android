@@ -91,7 +91,7 @@ public class RegisterActivity extends AppCompatActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                User existingUser = AppDatabase.getDatabase(RegisterActivity.this).userDao().getUser(username);
+                User existingUser = new UserViewModel(RegisterActivity.this).getUser(username);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -149,13 +149,13 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     private void saveUserInformation(String username, String email, String password) {
-        Bitmap image = BitmapUtils.getResizedBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ic_profile));
+        Bitmap image = ImageOperations.resourceToBitmap(this, R.drawable.ic_profile);
         if (profileImage != null)
             image = BitmapUtils.getResizedBitmap(profileImage);
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        image.compress(Bitmap.CompressFormat.JPEG, 100, bos);
-        String imageBase64 = Base64.encodeToString(bos.toByteArray(), Base64.DEFAULT);
-        AppDatabase.getDatabase(this).userDao().insert(new User(username, password, email, imageBase64));
+        String imageBase64 = ImageOperations.bitmapToBase64(image);
+        new UserViewModel(this).insert(new User(username, password, email, imageBase64));
+        Server server = new Server(this);
+        System.out.println(server.register(email, username, password, imageBase64));
         ToastManager.showToast("Registration successful", this);
     }
 
