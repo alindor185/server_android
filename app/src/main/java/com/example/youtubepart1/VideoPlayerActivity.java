@@ -1,16 +1,10 @@
 package com.example.youtubepart1;
 
-import android.content.ContentResolver;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,7 +22,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.io.ByteArrayOutputStream;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -101,6 +97,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements CommentsAd
                             @Override
                             public void run() {
                                 new VideoViewModel(VideoPlayerActivity.this).changeName(video.id, newTitle);
+                                new Server(VideoPlayerActivity.this).editVideo(new VideoViewModel(VideoPlayerActivity.this).getVideo(video.id));
                             }
                         }).start();
                     }
@@ -115,6 +112,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements CommentsAd
                     @Override
                     public void run() {
                         new VideoViewModel(VideoPlayerActivity.this).delete(video);
+                        new Server(VideoPlayerActivity.this).deleteVideo(video);
                         finish();
                     }
                 }).start();
@@ -132,10 +130,18 @@ public class VideoPlayerActivity extends AppCompatActivity implements CommentsAd
 
         // Get data from intent
         String title = video.getTitle();
-        String url = video.getUrl();
-        String views = video.getViews();
-        String channelName = video.getChannelName();
-        boolean isFile = video.getIsFile();
+        String url = video.getFilePath();
+        int views = video.getViews();
+        channelViews.setText(views+" views");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                video.setViews(video.getViews()+1);
+                new VideoViewModel(VideoPlayerActivity.this).delete(video);
+                new VideoViewModel(VideoPlayerActivity.this).insert(video);
+                new Server(VideoPlayerActivity.this).incrementVideoViews(video);
+            }
+        }).start();
         if (video.getUserName() != null && video.getUserName().equals(currentUserName)) {
             edit_delete.setVisibility(View.VISIBLE);
         }
@@ -152,12 +158,6 @@ public class VideoPlayerActivity extends AppCompatActivity implements CommentsAd
             videoTitle.setTextColor(Color.WHITE);
         }
 
-        if (channelName != null && views != null) {
-            channelViews.setText(String.format("%s • %s", channelName, views));
-        } else {
-            channelViews.setText("No channel or views information available");
-        }
-
         // Check if videoUrl is not null
         if (url != null) {
             // Log the video URI for debugging purposes
@@ -165,10 +165,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements CommentsAd
 
             // Use ContentResolver to open the content URI
             try {
-                if (isFile)
-                    videoView.setVideoPath(url);
-                else
-                    videoView.setVideoURI(Uri.parse(url));
+                videoView.setVideoPath(url);
                 MediaController mediaController = new MediaController(this);
                 videoView.setMediaController(mediaController);
                 videoView.start();
@@ -191,8 +188,6 @@ public class VideoPlayerActivity extends AppCompatActivity implements CommentsAd
 
         updateLikeDislikeUI();
 
-        // Add sample comments
-        addSampleComments();
         commentList.addAll(video.getCommentsList());
     }
 
@@ -218,18 +213,24 @@ public class VideoPlayerActivity extends AppCompatActivity implements CommentsAd
             comments.add(newComment);
             video.setCommentsList(comments);
             new VideoViewModel(VideoPlayerActivity.this).update(video);
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    JSONObject comment = new Server(VideoPlayerActivity.this).addComment(newComment, video.get_id());
+                    List<Video.Comment> comments2 = video.getCommentsList();
+                    try {
+                        comments2.get(comments2.size()-1).set_id(comment.getString("_id"));
+                        video.setCommentsList(comments2);
+                    } catch (JSONException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }).start();
             commentsAdapter.addComment(newComment);
             addCommentEditText.setText("");
             commentsRecyclerView.smoothScrollToPosition(commentsAdapter.getItemCount() - 1);
         } else
             ToastManager.showToast("You have to log in", VideoPlayerActivity.this);
-    }
-
-    private void addSampleComments() {
-        commentList.add(new Video.Comment(this, "User1", "2 hours ago", "Great video!", R.drawable.ic_profile));
-        commentList.add(new Video.Comment(this, "User2", "1 hour ago", "Thanks for sharing.", R.drawable.ic_profile));
-        commentList.add(new Video.Comment(this, "User3", "30 minutes ago", "Very informative.", R.drawable.ic_profile));
-        commentsAdapter.notifyDataSetChanged();
     }
 
     private void onLikeClicked(View view) {
@@ -320,14 +321,24 @@ public class VideoPlayerActivity extends AppCompatActivity implements CommentsAd
 
         Video.Comment updatedComment = new Video.Comment(user.userName, "Just now", updatedText, user.image);
         commentsAdapter.updateComment(position, updatedComment);
-
         List<Video.Comment> comments = video.getCommentsList();
+        String oldId = comments.get(position).get_id();
         comments.set(position + comments.size() - commentList.size(), updatedComment);
         video.setCommentsList(comments);
 
         // Update the database
         new Thread(() -> {
             new VideoViewModel(VideoPlayerActivity.this).update(video);
+            updatedComment.set_id(oldId);
+            JSONObject comment = new Server(VideoPlayerActivity.this).editComment(updatedComment, video.get_id());
+            List<Video.Comment> comments2 = video.getCommentsList();
+            try {
+                comments2.get(position).set_id(comment.getString("_id"));
+                video.setCommentsList(comments2);
+            } catch (JSONException e) {
+                throw new RuntimeException(e);
+            }
+            new Server(VideoPlayerActivity.this).editVideo(video);
         }).start();
 
         addCommentEditText.setText("");
@@ -336,15 +347,17 @@ public class VideoPlayerActivity extends AppCompatActivity implements CommentsAd
 
     @Override
     public void onDeleteComment(int position) {
+
         commentsAdapter.deleteComment(position);
 
         List<Video.Comment> comments = video.getCommentsList();
-        comments.remove(position + comments.size() - commentList.size()-1);
+        Video.Comment toDelete = comments.remove(position + comments.size() - commentList.size()-1);
         video.setCommentsList(comments);
 
         // Update the database
         new Thread(() -> {
             new VideoViewModel(VideoPlayerActivity.this).update(video);
+            new Server(VideoPlayerActivity.this).deleteComment(toDelete, video.get_id());
         }).start();
 
         submitCommentButton.setOnClickListener(v -> submitComment());
