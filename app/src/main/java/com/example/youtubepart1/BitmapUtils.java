@@ -3,7 +3,7 @@ package com.example.youtubepart1;
 import android.graphics.Bitmap;
 
 public class BitmapUtils {
-    private static int maxSize = 300;
+    private static int maxSize = 200;
 
     public static Bitmap getResizedBitmap(Bitmap image) {
 
