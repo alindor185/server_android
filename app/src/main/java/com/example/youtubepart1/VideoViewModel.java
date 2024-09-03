@@ -15,6 +15,11 @@ public class VideoViewModel extends ViewModel {
     public List<Video> getVideos() {
         return repository.getVideos();
     }
+
+    public Video getVideo(int id) {
+        return repository.getVideo(id);
+    }
+
     public void insert(Video video) {
         repository.insert(video);
     }
@@ -29,5 +34,9 @@ public class VideoViewModel extends ViewModel {
     }
     public List<Video> getVideosByUsername(String username) {
         return repository.getVideosByUsername(username);
+    }
+
+    public void deleteAll() {
+        repository.deleteAll();
     }
 }
