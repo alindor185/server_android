@@ -10,21 +10,24 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Video Name"
-        android:inputType="text" />
+        android:inputType="text"
+        android:textColor="@color/black"/>
 
     <EditText
         android:id="@+id/videoDescriptionEditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Video Description"
-        android:inputType="text" />
+        android:inputType="text"
+        android:textColor="@color/black" />
 
     <EditText
         android:id="@+id/videoUrlEditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Video URL"
-        android:inputType="textUri" />
+        android:inputType="textUri"
+        android:textColor="@color/black" />
 
     <ImageView
         android:id="@+id/thumbnailImageView"

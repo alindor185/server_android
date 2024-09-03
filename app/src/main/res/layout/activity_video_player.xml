@@ -81,7 +81,7 @@
         android:layout_below="@id/videoTitle"
         android:layout_marginStart="16dp"
         android:layout_marginTop="5dp"
-        android:text="Eurovision Song Contest • 1M views"
+        android:text=""
         android:textSize="14sp"
         android:textColor="@android:color/darker_gray" />
 
