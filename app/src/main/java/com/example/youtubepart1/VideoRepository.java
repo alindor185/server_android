@@ -18,6 +18,11 @@ public class VideoRepository {
     public List<Video> getVideos() {
         return videoDao.getVideos();
     }
+
+    public Video getVideo(int id) {
+        return videoDao.getVideo(id);
+    }
+
     public void insert(Video video) {
         videoDao.insert(video);
     }
@@ -32,5 +37,9 @@ public class VideoRepository {
     }
     public List<Video> getVideosByUsername(String username) {
         return videoDao.getVideosByUsername(username);
+    }
+
+    public void deleteAll() {
+        videoDao.deleteAll();
     }
 }
