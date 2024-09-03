@@ -26,6 +26,9 @@ import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -127,6 +130,21 @@ public class UserActivity extends AppCompatActivity {
 
         upload.setOnClickListener(v -> updateUserProfile());
 
+        findViewById(R.id.delete_account).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        new UserViewModel(UserActivity.this).delete(user);
+                        new Server(UserActivity.this).deleteProfile(user);
+                        Intent intent = new Intent(UserActivity.this, MainActivity.class);
+                        startActivity(intent);
+                    }
+                }).start();
+            }
+        });
+
         if (existingUser == null || user.userName.equals(existingUser.userName)) {
             usernameView.setEnabled(true);
             emailView.setEnabled(true);
@@ -169,6 +187,12 @@ public class UserActivity extends AppCompatActivity {
             UserViewModel userViewModel = new UserViewModel(this);
             userViewModel.delete(user);
             userViewModel.insert(newUser);
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    new Server(UserActivity.this).updateProfile(newUser);
+                }
+            }).start();
             Log.d(TAG, "User updated in database");
             VideoViewModel videoViewModel = new VideoViewModel(this);
             // Update associated videos
@@ -177,10 +201,17 @@ public class UserActivity extends AppCompatActivity {
                 video.setUserName(newUsername);
                 video.setProfilePic(base64);
                 videoViewModel.update(video);
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        new Server(UserActivity.this).editVideo(video);
+                    }
+                }).start();
             }
             Log.d(TAG, "Associated videos updated");
 
             HomeActivity.user = newUser;
+            user = newUser;
             ToastManager.showToast("The user was updated successfully", UserActivity.this);
 
             // Update the UI immediately
