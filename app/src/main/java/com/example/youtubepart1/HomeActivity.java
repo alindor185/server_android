@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.CursorWindow;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -31,11 +32,17 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.navigation.NavigationView;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -55,6 +62,13 @@ public class HomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+        try {
+            Field field = CursorWindow.class.getDeclaredField("sCursorWindowSize");
+            field.setAccessible(true);
+            field.set(null, 100 * 1024 * 1024); //the 100MB is the new size
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         if (getIntent().getExtras() != null)
             user = (User)getIntent().getExtras().getSerializable("user");
         // Initialize the ActivityResultLauncher
@@ -70,18 +84,23 @@ public class HomeActivity extends AppCompatActivity {
                             Uri uri = Uri.fromFile(new File(thumbnailUri));
                             String thumbnail = "";
                             try {
-                                Bitmap image = BitmapUtils.getResizedBitmap(MediaStore.Images.Media.getBitmap(getContentResolver(), uri));
-                                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                                image.compress(Bitmap.CompressFormat.PNG, 100, bos);
-                                thumbnail = Base64.encodeToString(bos.toByteArray(), Base64.DEFAULT);
+                                thumbnail = ImageOperations.bitmapToBase64(ImageOperations.uriToBitmap(this, uri));
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
                             }
-                            Video newVideo = new Video(videoName, videoUrl, thumbnail, "0 views", "now", "channelName", new String[0], user.userName, user.image);
+                            Video newVideo = new Video(videoName, videoUrl, thumbnail, 0, "now", new String[0], user.userName, user.image);
                             new Thread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    AppDatabase.getDatabase(HomeActivity.this).videoDao().insert(newVideo);
+
+                                    JSONObject object = new Server(HomeActivity.this).createVideo(newVideo);
+                                    try {
+                                        newVideo.setUploaderId(object.getJSONObject("uploader").getString("id"));
+                                        newVideo.set_id(object.getString("_id"));
+                                        new VideoViewModel(HomeActivity.this).insert(newVideo);
+                                    } catch (JSONException e) {
+                                        throw new RuntimeException(e);
+                                    }
                                     runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
@@ -99,9 +118,7 @@ public class HomeActivity extends AppCompatActivity {
         isLoggedIn = user != null;
         if (isLoggedIn) {
             ImageView profileImage = findViewById(R.id.icon_profile);
-            byte[] bytes = Base64.decode(user.image, Base64.DEFAULT);
-            Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-            profileImage.setImageBitmap(bitmap);
+            profileImage.setImageBitmap(ImageOperations.base64ToBitmap(user.image));
         }
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -254,30 +271,46 @@ public class HomeActivity extends AppCompatActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                if (AppDatabase.getDatabase(HomeActivity.this).videoDao().getVideos().isEmpty()) {
-                    AppDatabase.getDatabase(HomeActivity.this).videoDao().insert(new Video(HomeActivity.this, "Eden Golan - Hurricane", "android.resource://" + getPackageName() + "/" + R.raw.huricane, R.drawable.huricane, "1M views", "2 days ago", "Eurovision Song Contest", new String[]{}));
-                    AppDatabase.getDatabase(HomeActivity.this).videoDao().insert(new Video(HomeActivity.this, "אושר כהן - מנגן ושר", "android.resource://" + getPackageName() + "/" + R.raw.oshercohen, R.drawable.oshercohen, "550K views", "1 week ago", "Music Channel", new String[]{}));
-                    AppDatabase.getDatabase(HomeActivity.this).videoDao().insert(new Video(HomeActivity.this, "Java Tutorial", "android.resource://" + getPackageName() + "/" + R.raw.javatoutorial, R.drawable.javatoutorial, "300K views", "3 days ago", "Tutorial Channel", new String[]{}));
-                    AppDatabase.getDatabase(HomeActivity.this).videoDao().insert(new Video(HomeActivity.this, "Dallas vs Minnesota Game 5", "android.resource://" + getPackageName() + "/" + R.raw.dalmin5, R.drawable.dalmin5, "800K views", "5 days ago", "Sports Channel", new String[]{}));
-                    AppDatabase.getDatabase(HomeActivity.this).videoDao().insert(new Video(HomeActivity.this, "מאיר בנאי - לך אלי (אודיו)", "android.resource://" + getPackageName() + "/" + R.raw.meirbanai, R.drawable.meirbanai, "400K views", "1 month ago", "Music Channel", new String[]{}));
-                    AppDatabase.getDatabase(HomeActivity.this).videoDao().insert(new Video(HomeActivity.this, "Lionel Messi best plays", "android.resource://" + getPackageName() + "/" + R.raw.messi, R.drawable.messi, "1.2M views", "2 weeks ago", "Sports Channel", new String[]{}));
-                    AppDatabase.getDatabase(HomeActivity.this).videoDao().insert(new Video(HomeActivity.this, "דודו טסה - בסוף מתרגלים להכל", "android.resource://" + getPackageName() + "/" + R.raw.dudutasa, R.drawable.dudutasa, "600K views", "3 weeks ago", "Music Channel", new String[]{}));
-                    AppDatabase.getDatabase(HomeActivity.this).videoDao().insert(new Video(HomeActivity.this, "קוקי לבנה - כמה הייתי רוצה", "android.resource://" + getPackageName() + "/" + R.raw.kukilevana, R.drawable.kukilevana, "700K views", "4 days ago", "Music Channel", new String[]{}));
-                    AppDatabase.getDatabase(HomeActivity.this).videoDao().insert(new Video(HomeActivity.this, "בית הבובות - סיגפו", "android.resource://" + getPackageName() + "/" + R.raw.sigapo, R.drawable.sigapo, "350K views", "2 months ago", "Music Channel", new String[]{}));
-                    AppDatabase.getDatabase(HomeActivity.this).videoDao().insert(new Video(HomeActivity.this, "עמיר בניון - ניצחת איתי הכל", "android.resource://" + getPackageName() + "/" + R.raw.mazal, R.drawable.mazal, "900K views", "6 days ago", "Music Channel", new String[]{}));
-                    AppDatabase.getDatabase(HomeActivity.this).videoDao().insert(new Video(HomeActivity.this, "ABBA - Gimme! Gimme! Gimme! (A Man After Midnight)", "android.resource://" + getPackageName() + "/" + R.raw.gimmegimme, R.drawable.gimmegimme, "2M views", "1 year ago", "Classic Music Channel", new String[]{}));
+                for (File file : getExternalFilesDir(null).listFiles())
+                    file.delete();
+                VideoViewModel videoViewModel = new VideoViewModel(HomeActivity.this);
+                videoViewModel.deleteAll();
+                JSONArray videos = new Server(HomeActivity.this).getVideos();
+                if (videos != null) {
+                    long oldTime = System.currentTimeMillis();
+                    CountDownLatch latch = new CountDownLatch(videos.length());
+                    for (int i = 0; i < videos.length(); i++) {
+                        final int threadI = i;
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    videoViewModel.insert(new Video(HomeActivity.this, videos.getJSONObject(threadI)));
+                                } catch (JSONException e) {
+                                    throw new RuntimeException(e);
+                                }
+                                latch.countDown();
+                            }
+                        }).start();
+                    }
+                    try {
+                        latch.await();
+                    } catch (InterruptedException ignored) {
+                    }
+                    System.out.println(System.currentTimeMillis()-oldTime);
                 }
                 videoAdapter = new VideoAdapter(HomeActivity.this, video -> {
                     Intent intent = new Intent(HomeActivity.this, VideoPlayerActivity.class);
                     intent.putExtra("video", video);
                     intent.putExtra("user", user);
-
                     startActivity(intent);
                 }, user);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         recyclerView.setAdapter(videoAdapter);
+                        drawerLayout.setVisibility(View.VISIBLE);
+                        findViewById(R.id.progress_bar).setVisibility(View.GONE);
                     }
                 });
             }
