@@ -26,6 +26,9 @@ import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -111,9 +114,7 @@ public class UserActivity extends AppCompatActivity {
         existingUser = (User) getIntent().getSerializableExtra("existingUser");
 
         if (user != null) {
-            byte[] bytes = Base64.decode(user.image, Base64.DEFAULT);
-            Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-            img.setImageBitmap(bitmap);
+            img.setImageBitmap(ImageOperations.base64ToBitmap(user.image));
             usernameView.setText(user.userName);
             emailView.setText(user.email);
             Log.d(TAG, "Loaded user data, image size: " + user.image.length());
@@ -128,6 +129,21 @@ public class UserActivity extends AppCompatActivity {
         AppCompatButton cameraButton = findViewById(R.id.choose_image_camera);
 
         upload.setOnClickListener(v -> updateUserProfile());
+
+        findViewById(R.id.delete_account).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        new UserViewModel(UserActivity.this).delete(user);
+                        new Server(UserActivity.this).deleteProfile(user);
+                        Intent intent = new Intent(UserActivity.this, MainActivity.class);
+                        startActivity(intent);
+                    }
+                }).start();
+            }
+        });
 
         if (existingUser == null || user.userName.equals(existingUser.userName)) {
             usernameView.setEnabled(true);
@@ -145,11 +161,7 @@ public class UserActivity extends AppCompatActivity {
         String base64;
         if (filepath != null) {
             try {
-                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), filepath);
-                bitmap = Bitmap.createScaledBitmap(bitmap, 500, 500, true);
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 70, bos);
-                base64 = Base64.encodeToString(bos.toByteArray(), Base64.DEFAULT);
+                base64 = ImageOperations.bitmapToBase64(ImageOperations.uriToBitmap(this, filepath));
                 Log.d(TAG, "New image processed, base64 length: " + base64.length());
             } catch (IOException e) {
                 Log.e(TAG, "Error processing image", e);
@@ -172,21 +184,34 @@ public class UserActivity extends AppCompatActivity {
         User newUser = new User(newUsername, user.password, newEmail, base64);
 
         try {
-            AppDatabase db = AppDatabase.getDatabase(UserActivity.this);
-            db.userDao().delete(user);
-            db.userDao().insert(newUser);
+            UserViewModel userViewModel = new UserViewModel(this);
+            userViewModel.delete(user);
+            userViewModel.insert(newUser);
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    new Server(UserActivity.this).updateProfile(newUser);
+                }
+            }).start();
             Log.d(TAG, "User updated in database");
-
+            VideoViewModel videoViewModel = new VideoViewModel(this);
             // Update associated videos
-            List<Video> userVideos = db.videoDao().getVideosByUsername(user.userName);
+            List<Video> userVideos = videoViewModel.getVideosByUsername(user.userName);
             for (Video video : userVideos) {
                 video.setUserName(newUsername);
                 video.setProfilePic(base64);
-                db.videoDao().update(video);
+                videoViewModel.update(video);
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        new Server(UserActivity.this).editVideo(video);
+                    }
+                }).start();
             }
             Log.d(TAG, "Associated videos updated");
 
             HomeActivity.user = newUser;
+            user = newUser;
             ToastManager.showToast("The user was updated successfully", UserActivity.this);
 
             // Update the UI immediately
@@ -200,9 +225,7 @@ public class UserActivity extends AppCompatActivity {
 
     private void updateUIWithNewProfile(User updatedUser) {
         // Update the ImageView with the new profile picture
-        byte[] bytes = Base64.decode(updatedUser.image, Base64.DEFAULT);
-        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-        img.setImageBitmap(bitmap);
+        img.setImageBitmap(ImageOperations.base64ToBitmap(updatedUser.image));
 
         // Update other UI elements
         usernameView.setText(updatedUser.userName);
@@ -214,16 +237,14 @@ public class UserActivity extends AppCompatActivity {
     }
 
     private void displayUserVideos() {
-        List<Video> videos = AppDatabase.getDatabase(this).videoDao().getVideosByUsername(user.userName);
+        List<Video> videos = new VideoViewModel(this).getVideosByUsername(user.userName);
         for (Video video : videos) {
             View videoView = getLayoutInflater().inflate(R.layout.item_video_user, null);
             ImageView thumbnail = videoView.findViewById(R.id.video_thumbnail);
             TextView title = videoView.findViewById(R.id.video_title);
             TextView views = videoView.findViewById(R.id.video_views);
 
-            byte[] thumbBytes = Base64.decode(video.getThumbnail(), Base64.DEFAULT);
-            Bitmap thumbBitmap = BitmapFactory.decodeByteArray(thumbBytes, 0, thumbBytes.length);
-            thumbnail.setImageBitmap(thumbBitmap);
+            thumbnail.setImageBitmap(ImageOperations.base64ToBitmap(video.getThumbnail()));
             title.setText(video.getTitle());
             views.setText(video.getViews() + " views");
 
