@@ -52,4 +52,5 @@ dependencies {
     implementation ("com.google.android.material:material:1.4.0")
     implementation ("de.hdodenhof:circleimageview:3.1.0")
     implementation ("org.apache.httpcomponents.client5:httpclient5:5.3.1")
+    implementation ("org.mindrot:jbcrypt:0.4")
 }
