@@ -3,6 +3,7 @@ package com.example.youtubepart1;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
 
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
@@ -102,6 +103,8 @@ public class Video implements Serializable {
                 url = new URL(video.getString("thumbnail"));
             else
                 url = new URL("http://10.0.2.2:5000"+video.getString("thumbnail"));
+            Log.d("url", String.valueOf(video));
+            Log.d("url", String.valueOf(url));
             Bitmap image = BitmapFactory.decodeStream(url.openConnection().getInputStream());
             this.thumbnail = ImageOperations.bitmapToBase64(BitmapUtils.getResizedBitmap(image));
             this.views = video.getInt("views");
@@ -122,15 +125,18 @@ public class Video implements Serializable {
     }
 
     private void download(String url, String filePath) {
-        try (BufferedInputStream in = new BufferedInputStream(new URL(url).openStream());
-             FileOutputStream fileOutputStream = new FileOutputStream(filePath)) {
-            byte dataBuffer[] = new byte[1024];
-            int bytesRead;
-            while ((bytesRead = in.read(dataBuffer, 0, 1024)) != -1) {
-                fileOutputStream.write(dataBuffer, 0, bytesRead);
+        while (true) {
+            try (BufferedInputStream in = new BufferedInputStream(new URL(url).openStream());
+                 FileOutputStream fileOutputStream = new FileOutputStream(filePath)) {
+                byte dataBuffer[] = new byte[1024];
+                int bytesRead;
+                while ((bytesRead = in.read(dataBuffer, 0, 1024)) != -1) {
+                    fileOutputStream.write(dataBuffer, 0, bytesRead);
+                }
+                break;
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
