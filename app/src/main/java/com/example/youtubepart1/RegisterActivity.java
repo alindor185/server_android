@@ -155,8 +155,10 @@ public class RegisterActivity extends AppCompatActivity {
         String imageBase64 = ImageOperations.bitmapToBase64(image);
         new UserViewModel(this).insert(new User(username, password, email, imageBase64));
         Server server = new Server(this);
-        System.out.println(server.register(email, username, password, imageBase64));
-        ToastManager.showToast("Registration successful", this);
+        if (server.register(email, username, password, imageBase64) != null)
+            ToastManager.showToast("Registration successful", this);
+        else
+            ToastManager.showToast("User already exists", this);
     }
 
     private void navigateToMainActivity() {
