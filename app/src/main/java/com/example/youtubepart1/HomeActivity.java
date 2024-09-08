@@ -116,10 +116,6 @@ public class HomeActivity extends AppCompatActivity {
 
         // Check login status on app start
         isLoggedIn = user != null;
-        if (isLoggedIn) {
-            ImageView profileImage = findViewById(R.id.icon_profile);
-            profileImage.setImageBitmap(ImageOperations.base64ToBitmap(user.image));
-        }
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ImageView search = findViewById(R.id.icon_search);
@@ -205,7 +201,7 @@ public class HomeActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        findViewById(R.id.icon_profile).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.icon_profile2).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (user == null) {
@@ -267,6 +263,15 @@ public class HomeActivity extends AppCompatActivity {
             videoAdapter.updateList(this);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (isLoggedIn) {
+            ImageView profileImage = findViewById(R.id.icon_profile2);
+            profileImage.setImageBitmap(ImageOperations.base64ToBitmap(user.image));
+        }
+    }
+
     private void loadSampleVideos() {
         new Thread(new Runnable() {
             @Override
@@ -277,27 +282,14 @@ public class HomeActivity extends AppCompatActivity {
                 videoViewModel.deleteAll();
                 JSONArray videos = new Server(HomeActivity.this).getVideos();
                 if (videos != null) {
-                    long oldTime = System.currentTimeMillis();
-                    CountDownLatch latch = new CountDownLatch(videos.length());
                     for (int i = 0; i < videos.length(); i++) {
                         final int threadI = i;
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-                                    videoViewModel.insert(new Video(HomeActivity.this, videos.getJSONObject(threadI)));
-                                } catch (JSONException e) {
-                                    throw new RuntimeException(e);
-                                }
-                                latch.countDown();
-                            }
-                        }).start();
+                        try {
+                            videoViewModel.insert(new Video(HomeActivity.this, videos.getJSONObject(threadI)));
+                        } catch (JSONException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
-                    try {
-                        latch.await();
-                    } catch (InterruptedException ignored) {
-                    }
-                    System.out.println(System.currentTimeMillis()-oldTime);
                 }
                 videoAdapter = new VideoAdapter(HomeActivity.this, video -> {
                     Intent intent = new Intent(HomeActivity.this, VideoPlayerActivity.class);
