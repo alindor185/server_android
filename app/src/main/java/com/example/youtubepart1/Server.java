@@ -22,6 +22,7 @@ import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -93,7 +94,7 @@ public class Server {
         try {
             jsonObject.put("email", user.email);
             jsonObject.put("username", user.userName);
-            jsonObject.put("password", user.password);
+            jsonObject.put("password", BCrypt.hashpw(user.password, BCrypt.gensalt()));
             jsonObject.put("profilePicture", user.image);
         } catch (JSONException e) {
             throw new RuntimeException(e);
