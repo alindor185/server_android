@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    User existingUser = new UserViewModel(MainActivity.this).getUser(username);
+                    //User existingUser = new UserViewModel(MainActivity.this).getUser(username);
                     JSONObject jsonObject = new Server(MainActivity.this).login(username, password);
                     if (jsonObject != null) {
                         try {
@@ -73,10 +73,10 @@ public class MainActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            if (existingUser != null && existingUser.password.equals(password)) {
+                            if (jsonObject != null) {
                                 tvLoginError.setVisibility(TextView.GONE);  // Hide error message
                                 Intent intent = new Intent(MainActivity.this, HomeActivity.class);
-                                intent.putExtra("user", existingUser);
+                                intent.putExtra("user", new UserViewModel(MainActivity.this).getUser(username));
                                 startActivity(intent);
                                 finish();
                             } else {

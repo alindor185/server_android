@@ -210,7 +210,6 @@ public class UserActivity extends AppCompatActivity {
             }
             Log.d(TAG, "Associated videos updated");
 
-            HomeActivity.user = newUser;
             user = newUser;
             ToastManager.showToast("The user was updated successfully", UserActivity.this);
 
@@ -226,7 +225,8 @@ public class UserActivity extends AppCompatActivity {
     private void updateUIWithNewProfile(User updatedUser) {
         // Update the ImageView with the new profile picture
         img.setImageBitmap(ImageOperations.base64ToBitmap(updatedUser.image));
-
+        HomeActivity.user.image = updatedUser.image;
+        HomeActivity.user.userName = updatedUser.userName;
         // Update other UI elements
         usernameView.setText(updatedUser.userName);
         emailView.setText(updatedUser.email);

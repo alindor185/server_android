@@ -12,20 +12,22 @@ import java.util.List;
 public class SearchActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private VideoAdapter videoAdapter;
-    private List<Video> videoList;
-    private List<Video> filteredList;
+    private List<Video> allVideos;
+    private List<Video> filteredVideos;
     private User user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
+
         user = (User) getIntent().getSerializableExtra("user");
         SearchView searchView = findViewById(R.id.search_view);
         recyclerView = findViewById(R.id.recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        filteredList = new ArrayList<>();
+        allVideos = new ArrayList<>();
+        filteredVideos = new ArrayList<>();
 
         videoAdapter = new VideoAdapter(this, new VideoAdapter.OnItemClickListener() {
             @Override
@@ -37,6 +39,9 @@ public class SearchActivity extends AppCompatActivity {
         }, user);
 
         recyclerView.setAdapter(videoAdapter);
+
+        // Load videos from server
+        loadVideosFromServer();
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
@@ -53,13 +58,34 @@ public class SearchActivity extends AppCompatActivity {
         });
     }
 
+    private void loadVideosFromServer() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                VideoViewModel videoViewModel = new VideoViewModel(SearchActivity.this);
+                allVideos = videoViewModel.getVideos();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        filteredVideos.addAll(allVideos);
+                        videoAdapter.updateList(filteredVideos);
+                    }
+                });
+            }
+        }).start();
+    }
+
     private void filter(String text) {
-        filteredList.clear();
-        for (Video video : videoList) {
-            if (video.getTitle().toLowerCase().contains(text.toLowerCase())) {
-                filteredList.add(video);
+        filteredVideos.clear();
+        if (text.isEmpty()) {
+            filteredVideos.addAll(allVideos);
+        } else {
+            for (Video video : allVideos) {
+                if (video.getTitle().toLowerCase().contains(text.toLowerCase())) {
+                    filteredVideos.add(video);
+                }
             }
         }
-        videoAdapter.updateList(filteredList);
+        videoAdapter.updateList(filteredVideos);
     }
 }
