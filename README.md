@@ -57,13 +57,3 @@ Edit Comments
 Delete Comments
 Conclusion
 This project provides a YouTube-like platform with video upload, editing, and comment management functionality. Make sure to follow the steps for MongoDB setup and backend startup to ensure the application runs smoothly.
-
-
-
-
-
-
-
-
-
-
