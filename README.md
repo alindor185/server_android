@@ -69,3 +69,6 @@ This repository contains the Android frontend application and its connection to 
 ## Conclusion
 
 This project provides a YouTube-like platform with video upload, editing, and comment management functionality. Make sure to follow the steps for MongoDB setup and backend startup to ensure the application runs smoothly.
+
+## Link to a video of a complete run of the project together with the server updates -
+https://www.veed.io/view/0a5b4af4-bae1-4cde-9d6b-3c3ebcc1355f?panel=quality-survey
