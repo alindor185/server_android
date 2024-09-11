@@ -304,14 +304,13 @@ public class VideoPlayerActivity extends AppCompatActivity implements CommentsAd
         int minutes = (milliseconds / 1000) / 60;
         int seconds = (milliseconds / 1000) % 60;
         return String.format("%02d:%02d", minutes, seconds);
-    }
-
-    @Override
+    }@Override
     public void onEditComment(int position) {
         Video.Comment comment = commentList.get(position);
         addCommentEditText.setText(comment.getText());
         submitCommentButton.setOnClickListener(v -> updateComment(position));
     }
+
     private void updateComment(int position) {
         String updatedText = addCommentEditText.getText().toString().trim();
         if (updatedText.isEmpty()) {
@@ -328,26 +327,47 @@ public class VideoPlayerActivity extends AppCompatActivity implements CommentsAd
 
         // Update the database
         new Thread(() -> {
-            new VideoViewModel(VideoPlayerActivity.this).update(video);
-            updatedComment.set_id(oldId);
-            JSONObject comment = new Server(VideoPlayerActivity.this).editComment(updatedComment, video.get_id());
-            List<Video.Comment> comments2 = video.getCommentsList();
             try {
-                comments2.get(position).set_id(comment.getString("_id"));
-                video.setCommentsList(comments2);
-            } catch (JSONException e) {
-                throw new RuntimeException(e);
-            }
-            new Server(VideoPlayerActivity.this).editVideo(video);
-        }).start();
+                new VideoViewModel(VideoPlayerActivity.this).update(video);
+                updatedComment.set_id(oldId);
+                JSONObject comment = new Server(VideoPlayerActivity.this).editComment(updatedComment, video.get_id());
 
-        addCommentEditText.setText("");
-        submitCommentButton.setOnClickListener(v -> submitComment());
+                if (comment != null) {
+                    Log.d(TAG, "Server response: " + comment.toString());
+
+                    if (comment.has("_id")) {
+                        String newId = comment.getString("_id");
+                        Log.d(TAG, "Successfully retrieved new comment ID: " + newId);
+                        List<Video.Comment> comments2 = video.getCommentsList();
+                        if (position >= 0 && position < comments2.size()) {
+                            Log.d(TAG, "Updating comment at position: " + position + " with new ID: " + newId);
+                            comments2.get(position).set_id(newId);
+                            video.setCommentsList(comments2);
+                            new Server(VideoPlayerActivity.this).editVideo(video);
+                        } else {
+                            Log.e(TAG, "Invalid position: " + position);
+                        }
+                    } else {
+                        Log.e(TAG, "Server response does not contain _id field");
+                    }
+                } else {
+                    Log.e(TAG, "Received null response from server");
+                }
+            } catch (JSONException e) {
+                Log.e(TAG, "JSON parsing error", e);
+            } catch (Exception e) {
+                Log.e(TAG, "Error updating comment", e);
+            }
+
+            runOnUiThread(() -> {
+                addCommentEditText.setText("");
+                submitCommentButton.setOnClickListener(v -> submitComment());
+            });
+        }).start();
     }
 
     @Override
     public void onDeleteComment(int position) {
-
         commentsAdapter.deleteComment(position);
 
         List<Video.Comment> comments = video.getCommentsList();
@@ -356,10 +376,30 @@ public class VideoPlayerActivity extends AppCompatActivity implements CommentsAd
 
         // Update the database
         new Thread(() -> {
-            new VideoViewModel(VideoPlayerActivity.this).update(video);
-            new Server(VideoPlayerActivity.this).deleteComment(toDelete, video.get_id());
-        }).start();
+            try {
+                new VideoViewModel(VideoPlayerActivity.this).update(video);
+                JSONObject response = new Server(VideoPlayerActivity.this).deleteComment(toDelete, video.get_id());
 
-        submitCommentButton.setOnClickListener(v -> submitComment());
+                if (response != null) {
+                    Log.d(TAG, "Delete comment server response: " + response.toString());
+                    if (response.has("message")) {
+                        String message = response.getString("message");
+                        Log.d(TAG, "Delete comment message: " + message);
+                    } else {
+                        Log.e(TAG, "Delete comment response does not contain message field");
+                    }
+                } else {
+                    Log.e(TAG, "Received null response from server for delete comment");
+                }
+            } catch (JSONException e) {
+                Log.e(TAG, "JSON parsing error in delete comment", e);
+            } catch (Exception e) {
+                Log.e(TAG, "Error deleting comment", e);
+            }
+
+            runOnUiThread(() -> {
+                submitCommentButton.setOnClickListener(v -> submitComment());
+            });
+        }).start();
     }
 }
